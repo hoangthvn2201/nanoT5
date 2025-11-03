@@ -7,6 +7,7 @@ from transformers import (
     AutoTokenizer,
     T5ForConditionalGeneration,
     AutoConfig,
+    T5Config
 )
 
 from .copied_utils import (
@@ -19,25 +20,20 @@ from .t5_model import MyT5
 
 
 def get_model(args, config):
-    klass = {
-        'hf_t5': T5ForConditionalGeneration,
-        'local_t5': MyT5,
-    }[args.model.klass]
 
-    if args.model.checkpoint_path:
-        model = klass(config)
-        model.load_state_dict(torch.load(args.model.checkpoint_path))
-    elif args.model.random_init:
-        model = klass(config)
-    else:
-        assert klass == T5ForConditionalGeneration, 'To load HFs weights you need to use HF model'
-        model = klass.from_pretrained(
-            args.model.name,
-            config=config,
-        )
-
-    with open_dict(args):
-        args.n_all_param = sum([p.nelement() for p in model.parameters()])
+    tokenizer = AutoTokenizer.from_pretrained("VietAI/vit5-base")
+    MODEL_CONFIG = {                # T5 small setup
+    "vocab_size": tokenizer.vocab_size,
+    "d_model": 512,
+    "d_ff": 2048,
+    "num_layers": 6,
+    "num_decoder_layers": 6,
+    "num_heads": 8,
+    "dropout_rate": 0.1,
+    "layer_norm_epsilon": 1e-6,
+    }
+    config = T5Config(**MODEL_CONFIG)
+    model = T5ForConditionalGeneration(config)
     
     return model
 
@@ -61,10 +57,7 @@ def get_config(args):
 
 
 def get_tokenizer(args):
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.model.name,
-        use_fast=True
-    )
+    tokenizer = AutoTokenizer.from_pretrained("VietAI/vit5-base")
     tokenizer.model_max_length = int(1e9)
 
     return tokenizer
@@ -74,7 +67,7 @@ def load_dataset_splits(args):
     if args.mode == 'pt':
         dataset = datasets.load_dataset(
             'c4',
-            'en',
+            'vi',
             streaming=True,
         )
 
@@ -199,7 +192,7 @@ def get_dataloaders(tokenizer, config, args):
             shuffle=shuffle,
             collate_fn=data_collator,
             batch_size=batch_size,
-            num_workers=args.data.num_workers,
+            num_workers=1,
             pin_memory=True,
             drop_last=False,
         )
