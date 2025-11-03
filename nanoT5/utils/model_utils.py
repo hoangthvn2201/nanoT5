@@ -98,6 +98,7 @@ def load_dataset_splits(args):
 
 
 def process_dataset(dataset_splits, args, tokenizer):
+    tokenizer = AutoTokenizer.from_pretrained("VietAI/vit5-base")
     if args.mode == 'pt':
         final_datasets = {}
 
@@ -137,9 +138,11 @@ def process_dataset(dataset_splits, args, tokenizer):
 
 
 def get_data_collator(tokenizer, config, args):
+
+    Tokenizer = AutoTokenizer.from_pretrained("VietAI/vit5-base")
     if args.mode == 'pt':
         data_collator = DataCollatorForT5MLM(
-            tokenizer=tokenizer,
+            tokenizer=Tokenizer,
             noise_density=args.data.mlm_probability,
             mean_noise_span_length=args.data.mean_noise_span_length,
             input_length=args.data.input_length,
