@@ -234,14 +234,11 @@ def get_dataloaders(tokenizer, config, args):
         batch_size = args.optim.batch_size // args.optim.grad_acc
 
         # For iterable datasets we must NOT shuffle and should avoid workers>0
-        if is_iterable:
-            shuffle = False
-            num_workers = 0        # avoid indexing behavior in workers
-            pin_memory = False     # optional but safe for iterable streams
-        else:
-            shuffle = True         # map-style: allow shuffle
-            num_workers = 1
-            pin_memory = True
+
+        shuffle = False
+        num_workers = 0        # avoid indexing behavior in workers
+        pin_memory = False     # optional but safe for iterable streams
+
 
         dl = DataLoader(
             dataset[split],
