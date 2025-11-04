@@ -192,12 +192,8 @@ def get_dataloaders(tokenizer, config, args):
     for split in ['train', 'test']:
         batch_size = args.optim.batch_size // args.optim.grad_acc
 
-        shuffle = (split == 'train') and not is_iterable
+        shuffle = False
 
-        if args.mode == 'ft' and split == 'train':
-            assert shuffle is True
-        else:
-            assert shuffle is False
 
         dataloaders[split] = DataLoader(
             dataset[split],
@@ -210,16 +206,16 @@ def get_dataloaders(tokenizer, config, args):
         )
 
     # Add & Check args about data loaders
-    with open_dict(args):
-        if not is_iterable:
-            args.data.train_batches = len(dataloaders['train'])
-            args.data.test_batches = len(dataloaders['test'])
+    # with open_dict(args):
+    #     if not is_iterable:
+    #         args.data.train_batches = len(dataloaders['train'])
+    #         args.data.test_batches = len(dataloaders['test'])
 
-        if args.optim.epochs > 0:
-            assert not is_iterable
-            args.optim.total_steps = (len(dataloaders['train']) // args.optim.grad_acc) * args.optim.epochs 
+    #     if args.optim.epochs > 0:
+    #         assert not is_iterable
+    #         args.optim.total_steps = (len(dataloaders['train']) // args.optim.grad_acc) * args.optim.epochs 
 
-        args.eval.corrected_steps = args.eval.steps
+    #     args.eval.corrected_steps = args.eval.steps
 
     return dataloaders['train'], dataloaders['test']
 
