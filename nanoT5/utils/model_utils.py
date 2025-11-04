@@ -80,6 +80,10 @@ def load_dataset_splits(args):
             split='validation',
             streaming=True)
 
+        val_dataset = val_dataset_dataset.remove_columns(
+            ['timestamp', 'url']
+        )
+
         dataset_splits = {
             'train': train_dataset,
             'test': val_dataset,
