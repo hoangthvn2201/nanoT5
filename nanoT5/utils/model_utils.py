@@ -65,19 +65,24 @@ def get_tokenizer(args):
 
 def load_dataset_splits(args):
     if args.mode == 'pt':
-        dataset = datasets.load_dataset(
-            'allenai/c4',
-            'vi',
+        train_dataset = datasets.load_dataset(
+            'Symato/c4_vi-filtered_200GB',
             streaming=True,
         )
 
-        dataset = dataset.remove_columns(
+        train_dataset = train_dataset.remove_columns(
             ['timestamp', 'url']
         )
 
+        val_dataset = datasets.load_dataset(
+            'allenai/c4',
+            'vi',
+            split='validation',
+            streaming=True)
+
         dataset_splits = {
-            'train': dataset['train'],
-            'test': dataset['validation'],
+            'train': train_dataset,
+            'test': val_dataset,
         }
 
         assert (
