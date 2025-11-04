@@ -68,6 +68,7 @@ def load_dataset_splits(args):
         train_dataset = datasets.load_dataset(
             'Symato/c4_vi-filtered_200GB',
             streaming=True,
+            split='train'
         )
 
         train_dataset = train_dataset.remove_columns(
@@ -81,7 +82,8 @@ def load_dataset_splits(args):
         #     streaming=True)
         val_dataset = datasets.load_dataset(
             'Symato/c4_vi-filtered_200GB',
-            streaming=True)
+            streaming=True,
+            split='train')
 
         val_dataset = val_dataset.remove_columns(
             ['timestamp', 'url']
