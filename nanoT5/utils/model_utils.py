@@ -74,10 +74,13 @@ def load_dataset_splits(args):
             ['timestamp', 'url']
         )
 
+        # val_dataset = datasets.load_dataset(
+        #     'allenai/c4',
+        #     'vi',
+        #     split='validation',
+        #     streaming=True)
         val_dataset = datasets.load_dataset(
-            'allenai/c4',
-            'vi',
-            split='validation',
+            'Symato/c4_vi-filtered_200GB',
             streaming=True)
 
         val_dataset = val_dataset.remove_columns(
