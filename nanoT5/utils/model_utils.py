@@ -34,7 +34,9 @@ def get_model(args, config):
     }
     config = T5Config(**MODEL_CONFIG)
     model = T5ForConditionalGeneration(config)
-    
+
+    model.config.decoder_start_token_id = tokenizer.pad_token_id
+
     return model
 
 
