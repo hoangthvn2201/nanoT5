@@ -179,11 +179,52 @@ def get_data_collator(tokenizer, config, args):
     return data_collator
 
 
+# def get_dataloaders(tokenizer, config, args):
+#     dataset_splits = load_dataset_splits(args)
+#     dataset = process_dataset(dataset_splits=dataset_splits, args=args, tokenizer=tokenizer)
+#     data_collator = get_data_collator(tokenizer=tokenizer, config=config,
+#                                       args=args)
+
+#     is_iterable = isinstance(dataset['train'], IterableDataset)
+
+#     dataloaders = {}
+
+#     for split in ['train', 'test']:
+#         batch_size = args.optim.batch_size // args.optim.grad_acc
+
+#         shuffle = False
+
+
+#         dataloaders[split] = DataLoader(
+#             dataset[split],
+#             shuffle=shuffle,
+#             collate_fn=data_collator,
+#             batch_size=batch_size,
+#             num_workers=1,
+#             pin_memory=True,
+#             drop_last=False,
+#         )
+
+#     # Add & Check args about data loaders
+#     # with open_dict(args):
+#     #     if not is_iterable:
+#     #         args.data.train_batches = len(dataloaders['train'])
+#     #         args.data.test_batches = len(dataloaders['test'])
+
+#     #     if args.optim.epochs > 0:
+#     #         assert not is_iterable
+#     #         args.optim.total_steps = (len(dataloaders['train']) // args.optim.grad_acc) * args.optim.epochs 
+
+#     #     args.eval.corrected_steps = args.eval.steps
+
+#     return dataloaders['train'], dataloaders['test']
+
+from torch.utils.data import DataLoader
+
 def get_dataloaders(tokenizer, config, args):
     dataset_splits = load_dataset_splits(args)
     dataset = process_dataset(dataset_splits=dataset_splits, args=args, tokenizer=tokenizer)
-    data_collator = get_data_collator(tokenizer=tokenizer, config=config,
-                                      args=args)
+    data_collator = get_data_collator(tokenizer=tokenizer, config=config, args=args)
 
     is_iterable = isinstance(dataset['train'], IterableDataset)
 
@@ -192,32 +233,31 @@ def get_dataloaders(tokenizer, config, args):
     for split in ['train', 'test']:
         batch_size = args.optim.batch_size // args.optim.grad_acc
 
-        shuffle = False
+        # For iterable datasets we must NOT shuffle and should avoid workers>0
+        if is_iterable:
+            shuffle = False
+            num_workers = 0        # avoid indexing behavior in workers
+            pin_memory = False     # optional but safe for iterable streams
+        else:
+            shuffle = True         # map-style: allow shuffle
+            num_workers = 1
+            pin_memory = True
 
-
-        dataloaders[split] = DataLoader(
+        dl = DataLoader(
             dataset[split],
             shuffle=shuffle,
             collate_fn=data_collator,
             batch_size=batch_size,
-            num_workers=1,
-            pin_memory=True,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
             drop_last=False,
         )
-
-    # Add & Check args about data loaders
-    # with open_dict(args):
-    #     if not is_iterable:
-    #         args.data.train_batches = len(dataloaders['train'])
-    #         args.data.test_batches = len(dataloaders['test'])
-
-    #     if args.optim.epochs > 0:
-    #         assert not is_iterable
-    #         args.optim.total_steps = (len(dataloaders['train']) // args.optim.grad_acc) * args.optim.epochs 
-
-    #     args.eval.corrected_steps = args.eval.steps
+        # mark dataloader so training loop can check without isinstance mismatch
+        dl.is_iterable = is_iterable
+        dataloaders[split] = dl
 
     return dataloaders['train'], dataloaders['test']
+
 
 
 def get_optimizer(model, args):
