@@ -103,7 +103,7 @@ def eval(model, dataloader, logger, args, tokenizer):
     args.last_log = time.time()
     averager = Averager()
 
-    for batch_id, batch in enumerate(dataloader, start=1):
+    for batch_id, batch in enumerate(dataloader, start=0):
         if batch_id == args.eval.corrected_steps * args.optim.grad_acc:
             break
 
@@ -183,7 +183,7 @@ def train(model, train_dataloader, test_dataloader, accelerator, lr_scheduler,
         # In case there is a remainder from previous epoch, we need to reset the optimizer
         optimizer.zero_grad(set_to_none=True)
 
-        for batch_id, batch in enumerate(train_dataloader, start=1):
+        for batch_id, batch in enumerate(train_dataloader, start=0):
             if args.current_train_step > args.optim.total_steps:
                 break
 
